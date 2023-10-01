@@ -6,7 +6,7 @@ class CustomUserCreationForm(UserCreationForm):
     
     class Meta:
         model = CustomUser
-        fields = ("email",)
+        fields = ("email","name","roll_no")
         
     def clean_email(self):
         email = self.cleaned_data.get("email")
@@ -24,4 +24,4 @@ class CustomUserChangeForm(UserChangeForm):
 
     class Meta:
         model = CustomUser
-        fields = ("email",)
+        fields = ("email", "name", "roll_no")
