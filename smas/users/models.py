@@ -19,3 +19,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     
     def __str__(self):
         return self.email   
+    
+class Meal(models.Model):
+    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    meal_date = models.DateField()
+    has_breakfast = models.BooleanField(default=False)
+    has_lunch = models.BooleanField(default=False)
+    has_dinner = models.BooleanField(default=False)
+    
+    # Store timestamp of when the meal was taken
+    breakfast_time = models.DateTimeField(blank=True, null=True)
+    lunch_time = models.DateTimeField(blank=True, null=True)
+    dinner_time = models.DateTimeField(blank=True, null=True)
+    
+    class Meta:
+        unique_together = ('student', 'meal_date')
