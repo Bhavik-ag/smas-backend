@@ -5,3 +5,4 @@ djangorestframework-simplejwt==5.3.0
 django-cors-headers==4.2.0
 dj-database-url
 gunicorn==20.1.0
+django-rest-swagger
