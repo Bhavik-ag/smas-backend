@@ -184,3 +184,180 @@ class MealList(generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = MealSerializer(queryset, many=True)
         return Response(serializer.data)
+
+class MealStats(views.APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        student = CustomUser.objects.get(email=request.user)
+        
+        today = datetime.datetime.today().astimezone(tz=datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
+        current_month = today.month
+        current_year = today.year
+        
+        meal_stats = []
+        
+        for i in range(4):
+            month = current_month - i
+            year = current_year
+            
+            if month <= 0:
+                month = 12 + month
+                year = current_year - 1
+            
+            month_start = datetime.datetime(year, month, 1)
+            month_end = datetime.datetime(year, month + 1, 1)
+            
+            meals = Meal.objects.filter(student=student, meal_date__gte=month_start, meal_date__lt=month_end)
+            
+            
+            ## Count the number of breakfasts, lunches and dinners
+            breakfast_count = 0
+            lunch_count = 0
+            dinner_count = 0
+            
+            for meal in meals:
+                if meal.has_breakfast:
+                    breakfast_count += 1
+                if meal.has_lunch:
+                    lunch_count += 1
+                if meal.has_dinner:
+                    dinner_count += 1
+            
+            meal_stats.append({
+                'month': month,
+                'year': year,
+                'meal_count': {
+                    'breakfast': breakfast_count,
+                    'lunch': lunch_count,
+                    'dinner': dinner_count
+                }
+            })
+            
+        return Response(meal_stats)
+    
+### Endpoint for admin where he will input month, year and  roll number of student and get the meal stats of that student for that month
+class MealStatsForStudent(views.APIView):
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        email = request.data['email']
+        month = request.data['month']
+        year = request.data['year']
+    
+        
+        student = CustomUser.objects.get(email=email)
+        
+        month_start = datetime.datetime(year, month, 1)
+        month_end = datetime.datetime(year, month + 1, 1)
+        
+        meals = Meal.objects.filter(student=student, meal_date__gte=month_start, meal_date__lt=month_end)
+        
+        print(meals.count)
+        
+        ## Count the number of breakfasts, lunches and dinners
+        breakfast_count = 0
+        lunch_count = 0
+        dinner_count = 0
+        
+        for meal in meals:
+            if meal.has_breakfast:
+                breakfast_count += 1
+            if meal.has_lunch:
+                lunch_count += 1
+            if meal.has_dinner:
+                dinner_count += 1
+        
+        return Response({
+            'month': month,
+            'year': year,
+            'meal_count': {
+                'breakfast': breakfast_count,
+                'lunch': lunch_count,
+                'dinner': dinner_count
+            },
+            "meals": MealSerializer(meals, many=True).data
+        })
+        
+## Endpoint for admin to add user
+class AddUser(views.APIView):
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        user = CustomUser.objects.create_user(email=request.data['email'], password=request.data['password'])
+        user.save()
+        
+        return Response({'message': 'User created successfully.'}, status=HTTP_200_OK)
+        
+    def delete(self, request):
+        user = CustomUser.objects.get(email=request.data['email'])
+        user.delete()
+        
+        return Response({'message': 'User deleted successfully.'}, status=HTTP_200_OK)
+        
+    def put(self, request):
+        user = CustomUser.objects.get(email=request.data['email'])
+        user.is_active = not user.is_active
+        user.save()
+        
+        return Response({'message': 'User updated successfully.'}, status=HTTP_200_OK)
+        
+    def get(self, request):
+        users = CustomUser.objects.all()
+        return Response(UserSerialzer(users, many=True).data)
+    
+### Endpoint for admin to get the student details and last 4 month meal stats
+
+class RetrieveUser(views.APIView):
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        user = CustomUser.objects.get(email=request.data['email'])
+        
+        today = datetime.datetime.today().astimezone(tz=datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
+        current_month = today.month
+        current_year = today.year
+        
+        meal_stats = []
+        
+        for i in range(4):
+            month = current_month - i
+            year = current_year
+            
+            if month <= 0:
+                month = 12 + month
+                year = current_year - 1
+            
+            month_start = datetime.datetime(year, month, 1)
+            month_end = datetime.datetime(year, month + 1, 1)
+            
+            meals = Meal.objects.filter(student=user, meal_date__gte=month_start, meal_date__lt=month_end)
+            
+            
+            ## Count the number of breakfasts, lunches and dinners
+            breakfast_count = 0
+            lunch_count = 0
+            dinner_count = 0
+            
+            for meal in meals:
+                if meal.has_breakfast:
+                    breakfast_count += 1
+                if meal.has_lunch:
+                    lunch_count += 1
+                if meal.has_dinner:
+                    dinner_count += 1
+            
+            meal_stats.append({
+                'month': month,
+                'year': year,
+                'meal_count': {
+                    'breakfast': breakfast_count,
+                    'lunch': lunch_count,
+                    'dinner': dinner_count
+                }
+            })
+            
+        return Response({
+            'user': UserSerialzer(user, many=False).data,
+            'meal_stats': meal_stats
+        })
