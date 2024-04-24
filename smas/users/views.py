@@ -284,7 +284,7 @@ class AddUser(views.APIView):
     permission_classes = [IsAdminUser]
     
     def post(self, request):
-        user = CustomUser.objects.create_user(email=request.data['email'], password=request.data['password'])
+        user = CustomUser.objects.create_user(email=request.data['email'], password=request.data['password'], name=request.data['name'], roll_no=request.data['roll_no'])
         user.save()
         
         return Response({'message': 'User created successfully.'}, status=HTTP_200_OK)
