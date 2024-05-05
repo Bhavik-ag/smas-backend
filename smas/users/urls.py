@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import UserList, GenerateQRHash, CustomTokenObtainPairView, CustomTokenRefreshView, VerifyQRHash, MealList, MealStats, MealStatsForStudent, AddUser, RetrieveUser
+from .views import UserList, GenerateQRHash, CustomTokenObtainPairView, CustomTokenRefreshView, VerifyQRHash, MealList, MealStats, MealStatsForStudent, AddUser, RetrieveUser, MealStatsForAll
+
 
 urlpatterns = [
     path('', UserList.as_view(), name='user-list'),
@@ -10,6 +11,7 @@ urlpatterns = [
     path('meals/', MealList.as_view(), name='meal-list'),
     path('meals-stats/', MealStats.as_view(), name='meal-stats'),
     path('admin/mealsstats/', MealStatsForStudent.as_view(), name='meal-stats-for-student'),
+    path('admin/mealsstatsforall/', MealStatsForAll.as_view(), name='meal-stats-for-all'),
     path('add/', AddUser.as_view(), name='add-user'),
     path('retrieve/', RetrieveUser.as_view(), name='retrieve-user'),
 ]

@@ -1,5 +1,6 @@
 import datetime
 from django.conf import settings
+from django.db.models import Count
 
 from .models import CustomUser, Meal
 from .serializers import UserSerialzer, MealSerializer
@@ -8,7 +9,6 @@ from rest_framework import generics, views
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
-
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -361,3 +361,35 @@ class RetrieveUser(views.APIView):
             'user': UserSerialzer(user, many=False).data,
             'meal_stats': meal_stats
         })
+
+# Here admin will enter month and year and get the meal stats of all students for that month
+class MealStatsForAll(views.APIView):
+    
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        month = request.data['month']
+        year = request.data['year']
+    
+                
+        month_start = datetime.datetime(year, month, 1)
+        month_end = datetime.datetime(year, month + 1, 1)
+        
+        ### Group by student
+        meals_grouped = Meal.objects.filter(meal_date__gte=month_start, meal_date__lt=month_end).values('student').annotate(breakfast_count=Count('has_breakfast'), lunch_count=Count('has_lunch'), dinner_count=Count('has_dinner'))
+        # meals = Meal.objects.filter(meal_date__gte=month_start, meal_date__lt=month_end)
+        print(meals_grouped)
+        
+        data = []
+        
+        for meals in meals_grouped:
+            student = CustomUser.objects.get(id=meals["student"])
+            meals["student"] = UserSerialzer(student, many=False).data
+            data.append({
+                'student': student.roll_no,
+                'breakfast': meals["breakfast_count"],
+                'lunch': meals["lunch_count"],
+                'dinner': meals["dinner_count"]
+            })
+        
+        return Response(data)
