@@ -112,10 +112,10 @@ class GenerateQRHash(views.APIView):
             if meal_instance.has_dinner:
                 response_data['message'] = 'You have already had a meal today.'
                 
-        response_data['meal'] = meal_type
+        response_data['meal'] = 'lunch'
         
         # Generate a user and meal specific hash here
-        response_data['hash'] = student.email + meal_type + str(today)
+        response_data['hash'] = student.email + 'lunch'
             
         return Response(response_data)
                      
